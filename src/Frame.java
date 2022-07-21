@@ -14,7 +14,6 @@ public class Frame extends JFrame implements Constant {
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setBackground(Color.DARK_GRAY);
         f.setLocationRelativeTo(null);
-       // GamePlay gm = new GamePlay();
         f.add(new Panel());
 
     }
