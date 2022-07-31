@@ -1,56 +1,69 @@
 import java.awt.*;
-import java.io.IOException;
-import java.util.Random;
+import java.awt.event.*;
 import javax.swing.*;
+import java.util.Random;
 
-public class Panel extends JPanel implements Constant {
+public class Panel extends JPanel implements ActionListener{
 
-    Timer timer;
-    Random random = new Random();
-    ImageIcon background;
-    ImageIcon ImageBackground;
-    ImageIcon nav;
+	static final int SCREEN_WIDTH = 800;
+	static final int SCREEN_HEIGHT = 700;
+	static final int UNIT_SIZE = 25;
+    static final int BOARD_WIDTH = 725;
+    static final int BOARD_HEIGHT = 625;
+	static final int GAME_UNITS = (BOARD_WIDTH*BOARD_HEIGHT)/(UNIT_SIZE*UNIT_SIZE);
+	static final int DELAY = 175;
+	final int x[] = new int[GAME_UNITS];
+	final int y[] = new int[GAME_UNITS];
+	int snakeLength = 3;
+	int applesEaten;
+	int appleX;
+	int appleY;
+	char direction = 'R';
+	boolean running = false;
+    boolean moving = false;
+	Timer timer;
+	Random random;
+
     ImageIcon apple;
+    ImageIcon ImageBackground;
+    ImageIcon background;
+    ImageIcon nav;
     ImageIcon appleScore;
     ImageIcon trophy;
+	
+	Panel(){
+		random = new Random();
+		this.setPreferredSize(new Dimension(SCREEN_WIDTH,SCREEN_HEIGHT));
+		this.setBackground(Color.black);
+		this.setFocusable(true);
+		this.addKeyListener(new MyKeyAdapter());
+		startGame();
+	}
 
-    ImageIcon snakeheadup;
-    ImageIcon snakeheaddown;
-    ImageIcon snakeheadleft;
-    ImageIcon snakeheadright;
-    ImageIcon snakebody;
+	public void startGame() {
+		newApple();
+		running = true;
+		timer = new Timer(DELAY,this);
+		timer.start();
+	}
 
-    int[] appleX= {25,50,75,100,125,150,175,200,225,250,275,300,325,350,375,400,425,450,475,500,525,550,575,600,625,650,675};
-    int[] appleY = {75,100,125,150,175,200,225,250,275,300,325,350,375,400,425,450,475,500,525};
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		draw(g);
+	}
 
-    int xpos = random.nextInt(27);
-	int ypos = random.nextInt(19);
+	public void draw(Graphics g) {
 
-    int[] x = new int[GAME_UNIT];
-    int[] y = new int[GAME_UNIT];
+        if (!moving) {
+            x[0] = 125;
+            x[1] = 100;
+            x[2] = 75;
 
-    int snakelength = 1;
+            y[0] = 100;
+            y[1] = 100;
+            y[2] = 100;
+        }
 
-    boolean up = false;
-    boolean down = false;
-    boolean left = false;
-    boolean right = false;
-    boolean moving = false;
-
-    public Panel() {
-        
-        restartMove();
-
-        // this.addKeyListener(new MyKeyAdapter());
-    }
-
-    public void startGame() {
-
-    }
-
-    public void paint(Graphics g) {
-        
-        
         background = new ImageIcon("img/background.jpg");
         background.paintIcon(this, g, 0, 0);
 
@@ -59,90 +72,242 @@ public class Panel extends JPanel implements Constant {
 
         nav = new ImageIcon("img/nav.png");
         nav.paintIcon(this, g, 25, 0);
-        
+
         appleScore = new ImageIcon("img/apple3.png");
         appleScore.paintIcon(this, g, 40, 20);
 
         trophy = new ImageIcon("img/trophy.png");
         trophy.paintIcon(this, g, 650, 20);
 
-        // for (int i = 0; i<SCREEN_HEIGHT/UNIT_SIZE; i++) {
-        //     g.drawLine(i*UNIT_SIZE, 80, i*UNIT_SIZE, SCREEN_HEIGHT);
-        //     g.drawLine(50, i*UNIT_SIZE, SCREEN_WIDTH, i*UNIT_SIZE);
-        // }
+        g.setColor(Color.WHITE);
+		g.setFont(new Font("arial", Font.PLAIN, 20));
+		g.drawString("" + applesEaten, 100, 55);
+		g.drawString("" + snakeLength, 710, 55);
+		
+		if(running) {
 
-        apple = new ImageIcon("img/apple2.png");
-        apple.paintIcon(this, g, appleX[xpos], appleY[ypos]);
-        
-        snakeheadright = new ImageIcon("img/snakehead-right.png");
-        snakeheadright.paintIcon(this, g, x[0], y[0]);
+            apple = new ImageIcon("img/apple2.png");
+            apple.paintIcon(this, g, appleX, appleY);
+		
+			for(int i = 0; i< snakeLength; i++) {
+				if(i == 0) {
+					g.setColor(new Color(100, 227, 62));
+					g.fillOval(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+				}
+				else {
+					g.setColor(new Color(45,180,0));
+					g.fillOval(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+				}			
+			}
+		} else {
+			gameOver(g);
+		}
+		
+	}
 
-        snakebody = new ImageIcon("img/snakebody.png");
-        snakebody.paintIcon(this, g, x[1], y[1]);
-
-        for (int i=0; i<snakelength; i++) {
-            
-            if (i==0 && right) {
-                snakeheadright = new ImageIcon("img/snakehead-right.png");
-                snakeheadright.paintIcon(this, g, x[i], y[i]);
+	public void newApple(){
+		appleX = random.nextInt((int)(BOARD_WIDTH/UNIT_SIZE))*UNIT_SIZE;
+            while (appleX < 50) {
+                appleX = random.nextInt((int)(BOARD_WIDTH/UNIT_SIZE))*UNIT_SIZE;
             }
-
-            if (i==0 && left) {
-                snakeheadleft = new ImageIcon("img/snakehead-left.png");
-                snakeheadleft.paintIcon(this, g, x[i], y[i]);
+		appleY = random.nextInt((int)(BOARD_HEIGHT/UNIT_SIZE))*UNIT_SIZE;
+            while (appleY < 75) {
+                appleY = random.nextInt((int)(BOARD_HEIGHT/UNIT_SIZE))*UNIT_SIZE;
             }
+	}
 
-            if (i==0 && up) {
-                snakeheadup = new ImageIcon("img/snakehead-up.png");
-                snakeheadup.paintIcon(this, g, x[i], y[i]);
-            }
+	public void move(){
+		for(int i = snakeLength; i>0; i--) {
+			x[i] = x[i-1];
+			y[i] = y[i-1];
+		}
+		
+		switch(direction) {
+		case 'U':
+			y[0] = y[0] - UNIT_SIZE;
+			break;
+		case 'D':
+			y[0] = y[0] + UNIT_SIZE;
+			break;
+		case 'L':
+			x[0] = x[0] - UNIT_SIZE;
+			break;
+		case 'R':
+			x[0] = x[0] + UNIT_SIZE;
+			break;
+		}
+		
+	}
+	public void checkApple() {
+		if((x[0] == appleX) && (y[0] == appleY)) {
+			snakeLength++;
+			applesEaten++;
+			newApple();
+		}
+	}
 
-            if (i==0 && down) {
-                snakeheaddown = new ImageIcon("img/snakehead-down.png");
-                snakeheaddown.paintIcon(this, g, x[i], y[i]);
-            }
+	public void checkCollisions() {
+		//checks if head collides with body
+		for(int i = snakeLength; i>0; i--) {
+			if((x[0] == x[i]) && (y[0] == y[i])) {
+				running = false;
+			}
+		}
 
-            if (i!=0) {
-                snakebody = new ImageIcon("img/snakebody.png");
-                snakebody.paintIcon(this, g, x[i], y[i]);
-            }
+        if (direction == 'R') {
+
+             for (int i = snakeLength; i>=0; i--) {
+
+                if (x[i] > BOARD_WIDTH) {
+                    x[i] = 50;
+                }
+            }           
         }
 
-    }
-
-    public void restartMove() {
-        if (!moving) {
-            x[0] = 145;
-            x[1] = 119;
+        if (direction == 'L') {
             
+            for (int i = snakeLength; i>=0; i--) {
 
-            y[0] = 94;
-            y[1] = 94;
-           
+                if (x[i] < 50) {
+                    x[i] = BOARD_WIDTH;
+                }
+            }           
         }
-    }
 
-    
-    public void move() {
+        if (direction == 'U') {
 
-    }
+            for (int i = snakeLength; i>=0; i--) {
 
-    public void checkApple() {
+                if (y[i] < 75) {
+                    y[i] = BOARD_HEIGHT;
+                }
+			}           
+        }
 
-    }
+        if (direction == 'D') {
 
-    public void checkCollision() {
+            for (int i = snakeLength; i>=0; i--) {
 
-    }
+                if (y[i] > BOARD_HEIGHT) {
+                    y[i] = 75;
+                }
+            }           
+        }
 
-    public void gameOVer() {
 
-    }
+		// //check if head touches left border
+		// if(x[0] < 0) {
+		// 	running = false;
+		// }
+		// //check if head touches right border
+		// if(x[0] > SCREEN_WIDTH) {
+		// 	running = false;
+		// }
+		// //check if head touches top border
+		// if(y[0] < 0) {
+		// 	running = false;
+		// }
+		// //check if head touches bottom border
+		// if(y[0] > SCREEN_HEIGHT) {
+		// 	running = false;
+		// }
+		
+		// if(!running) {
+		// 	timer.stop();
+		// }
+	}
+	
+	public void gameOver(Graphics g) {
+		//Score
+		g.setColor(new Color(255, 233, 49));
+		g.setFont( new Font("Baskerville Old Face",Font.BOLD, 40));
+		g.drawString("Score: "+applesEaten, 320, 200);
 
-    // @Override
-    // public void actionPerformed(ActionEvent e) {
-    // // TODO Auto-generated method stub
+		//Game Over text
+		g.setColor(Color.red);
+		g.setFont( new Font("Baskerville Old Face",Font.BOLD, 75));
+		FontMetrics metrics2 = getFontMetrics(g.getFont());
+		g.drawString("Game Over", (SCREEN_WIDTH - metrics2.stringWidth("Game Over"))/2, SCREEN_HEIGHT/2);
 
-    // }
+		//Restart text
+		g.setColor(new Color(255, 233, 49));
+        g.setFont(new Font("arial",Font.BOLD,20));
+		g.drawString("Click space to RESTART", 290, 500);
 
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		
+		if(running) {
+			move();
+			checkApple();
+			checkCollisions();
+		}
+		repaint();
+	}
+	
+	public class MyKeyAdapter extends KeyAdapter{
+		@Override
+		public void keyPressed(KeyEvent e) {
+			switch(e.getKeyCode()) {
+			case KeyEvent.VK_LEFT:
+                moving = true;
+				if(direction != 'R') {
+					direction = 'L';
+				}
+				break;
+			case KeyEvent.VK_RIGHT:
+                moving = true;
+				if(direction != 'L') {
+					direction = 'R';
+				}
+				break;
+			case KeyEvent.VK_UP:
+                moving = true;
+				if(direction != 'D') {
+					direction = 'U';
+				}
+				break;
+			case KeyEvent.VK_DOWN:
+                moving = true;
+				if(direction != 'U') {
+					direction = 'D';
+				}
+				break;
+                case KeyEvent.VK_A:
+                moving = true;
+				if(direction != 'R') {
+					direction = 'L';
+				}
+				break;
+			case KeyEvent.VK_D:
+                moving = true;
+				if(direction != 'L') {
+					direction = 'R';
+				}
+				break;
+			case KeyEvent.VK_W:
+                moving = true;
+				if(direction != 'D') {
+					direction = 'U';
+				}
+				break;
+			case KeyEvent.VK_S:
+                moving = true;
+				if(direction != 'U') {
+					direction = 'D';
+				}
+				break;
+            case KeyEvent.VK_SPACE:
+				moving = false;
+                applesEaten = 0;
+                snakeLength = 3;
+                running = true;
+                repaint();
+				break;
+			}
+            
+		}
+	}
 }

@@ -1,20 +1,16 @@
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JFrame;
 
-public class Frame extends JFrame implements Constant {
+public class Frame extends JFrame{
 
-    
-    public Frame() {
-        JFrame f = new JFrame();
-
-        f.setTitle("Snake Game");
-        f.setBounds(10, 10, SCREEN_WIDTH, SCREEN_HEIGHT);
-        f.setResizable(false);
-        f.setVisible(true);
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.setBackground(Color.DARK_GRAY);
-        f.setLocationRelativeTo(null);
-        f.add(new Panel());
-
-    }
+	Frame(){
+			
+		this.add(new Panel());
+		this.setTitle("Snake Game");
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setResizable(false);
+		this.pack();
+		this.setVisible(true);
+		this.setLocationRelativeTo(null);
+		
+	}
 }
